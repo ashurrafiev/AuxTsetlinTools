@@ -1,0 +1,25 @@
+<logger>
+<include file="MultiClassTsetlinMachine.h" />
+
+<states path="tm-spectrum.csv" enable="LOG_TASTATES"
+	min="-NUM_STATES+1" max="NUM_STATES">
+	<![CDATA[ tm->clauses[j].ta[k] ]]>
+</states>
+
+<status joinClasses="true" path="tm-status.csv" enable="LOG_STATUS">
+	<tm>
+		<var id="acctrain" cache="accTrain" />
+		<var id="acctest" cache="accTest" />
+	</tm>
+	<class>
+		<var id="acc" cache="acc" />
+		<var id="inc" type="int"> countIncluded(tm) </var>
+		<event id="flips" avg="stepSize" reset="0" />
+		<event id="type1-c" counter="countType1" reset="1" />
+		<event id="type2-c" counter="countType2" reset="1" />
+		<event id="vote" counter="voteSum" avg="stepSize" reset="0" />
+	</class>
+</status>
+
+</logger>
+

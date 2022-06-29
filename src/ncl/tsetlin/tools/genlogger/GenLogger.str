@@ -1,0 +1,172 @@
+probe.header.cls [id] $$
+			fprintf(log->fp, "%s%%d\t", i);
+$$
+probe.header [id] $$
+		fprintf(log->fp, "%s\t");
+$$
+probe.log [fmt,code] $$
+	fprintf(log->fp, "%s\t", %s);
+$$
+var.cache.cls [type,cache] $$
+	%s %s[CLASSES];
+$$
+var.cache [type,cache] $$
+	%s %s;
+$$
+var.code.cache.cls [cache] = log->%s[i]
+var.code.cache [cache] = log->%s
+event.code.avg [counter,avg] = tm->%s/(double)%s
+event.code [counter] = tm->%s
+event.log [counter,reset] $$
+		tm->%s = %s;
+$$
+
+main.start $$
+#ifndef _TSETLIN_LOGGER_H_
+#define _TSETLIN_LOGGER_H_
+
+$$
+
+main.include [file] $$
+#include "%s"
+$$
+
+main.defs [states,status,minState,maxState,absStates] $$
+
+#define TASTATES_PATH "%s"
+#define STATUS_PATH "%s"
+
+#define MIN_STATE (%s)
+#define MAX_STATE (%s)
+#define TOTAL_STATES (MAX_STATE-MIN_STATE+1)
+
+$$
+
+states.struct $$
+struct LogTAStates {
+	FILE* fp;
+};
+
+$$
+
+status.struct.start $$
+struct LogStatus {
+	FILE* fp;
+$$
+
+status.struct.finish $$
+};
+
+$$
+
+startLog.start [name,type,pathDef,enable] $$
+void %1$s(%2$s* log) {
+	if(!%4$s)
+		return;
+	log->fp = fopen(%3$s, LOG_APPEND ? "at" : "wt");
+	if(log->fp == NULL) {
+		printf("Error writing %%s\n", %3$s);
+		exit(EXIT_FAILURE);
+	}
+	if(!LOG_APPEND) {
+		fprintf(log->fp, "t\t");
+$$
+
+startLog.finish $$
+		fprintf(log->fp, "\n");
+		fflush(log->fp);
+	}
+}
+
+$$
+
+startLog.finish.0 $$
+		fprintf(log->fp, "\n");
+		fflush(log->fp);
+	}
+$$
+
+startLog.finish.1 $$
+}
+
+$$
+
+states.startLog.body $$
+		for(int i=0; i<CLASSES; i++) {
+			for(int s=MIN_STATE; s<=MAX_STATE; s++)
+				fprintf(log->fp, "c%d%+d\t", i, s);
+		}
+$$
+
+status.startLog.classes.0 $$
+		for(int i=0; i<CLASSES; i++) {
+$$
+
+status.startLog.classes.1 $$
+		}
+$$
+
+status.resetCache.code\ [cache] = \t%s = 0;\n
+status.resetCache.code.cls\ [cache] = \t\t%s = 0;\n
+
+status.resetCache.classes.0 $$
+	for(int i=0; i<CLASSES; i++) {
+$$
+
+status.resetCache.classes.1 $$
+	}
+$$
+
+states.log [stateCode] $$
+void logTAStates(LogTAStates* log, int step, MultiClassTsetlinMachine* mctm) {
+	if(!LOG_TASTATES)
+		return;
+	fprintf(log->fp, "%%d\t", step);
+	int counts[TOTAL_STATES];
+	for(int i=0; i<CLASSES; i++) {
+		for(int s=0; s<TOTAL_STATES; s++)
+			counts[s] = 0;
+		TsetlinMachine* tm = &mctm->tsetlinMachines[i];
+		for(int j=0; j<CLAUSES; j++)
+			for(int k=0; k<LITERALS; k++)
+				counts[(%s) - MIN_STATE]++;
+		for(int s=0; s<TOTAL_STATES; s++)
+			fprintf(log->fp, "%%d\t", counts[s]);
+	}
+	fprintf(log->fp, "\n");
+	fflush(log->fp);
+}
+
+$$
+
+status.log.start $$
+void logStatus(LogStatus* log, int step, int stepSize, MultiClassTsetlinMachine* mctm) {
+	if(!LOG_STATUS)
+		return;
+	fprintf(log->fp, "%d\t", step);
+$$
+
+status.log.classes.0 $$
+	for(int i=0; i<CLASSES; i++) {
+		TsetlinMachine* tm = &mctm->tsetlinMachines[i];
+$$
+
+status.log.classes.1 $$
+	}
+$$
+
+status.log.finish $$
+	fprintf(log->fp, "\n");
+	fflush(log->fp);
+}
+
+$$
+
+finishLog [name,type,enable] $$
+void %1$s(%2$s* log) {
+	if(!%3$s)
+		return;
+	fclose(log->fp);
+}
+
+$$
