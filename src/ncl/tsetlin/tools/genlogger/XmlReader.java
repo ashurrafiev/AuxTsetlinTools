@@ -34,24 +34,38 @@ public class XmlReader {
 	public static Element element(Element e, String name) {
 		if(e==null)
 			return null;
-		NodeList ns = e.getElementsByTagName(name);
-		if(ns.getLength()==0)
-			return null;
-		else
-			return (Element)ns.item(0);
+		
+		NodeList ns = e.getChildNodes();
+		for(int i=0; i<ns.getLength(); i++) {
+			Node n = ns.item(i);
+			if(n instanceof Element) {
+				Element c = (Element)n;
+				String tag = c.getTagName();
+				if(tag.equals(name))
+					return c;
+			}
+		}
+		return null;
 	}
-	
+
 	public static LinkedList<Element> elements(Element e, String name) {
 		LinkedList<Element> list = new LinkedList<>();
 		if(e==null)
 			return list;
-		NodeList ns = e.getElementsByTagName(name);
+		
+		NodeList ns = e.getChildNodes();
 		for(int i=0; i<ns.getLength(); i++) {
-			list.add((Element)ns.item(i));
+			Node n = ns.item(i);
+			if(n instanceof Element) {
+				Element c = (Element)n;
+				String tag = c.getTagName();
+				if(tag.equals(name))
+					list.add(c);
+			}
 		}
 		return list;
 	}
-	
+
 	public static LinkedList<Element> elements(Element e, String... names) {
 		LinkedList<Element> list = new LinkedList<>();
 		if(e==null)
@@ -74,8 +88,15 @@ public class XmlReader {
 		return list;
 	}
 	
+	public static String trimTextContent(Element e) {
+		if(e==null)
+			return null;
+		String text = e.getTextContent().trim();
+		return text.isEmpty() ? null : text;
+	}
+	
 	public static String attr(Element e, String name, String def) {
-		if(e.hasAttribute(name))
+		if(e!=null && e.hasAttribute(name))
 			return e.getAttribute(name);
 		else
 			return def;

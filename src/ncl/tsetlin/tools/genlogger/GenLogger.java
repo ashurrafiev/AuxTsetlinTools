@@ -2,6 +2,7 @@ package ncl.tsetlin.tools.genlogger;
 
 import static ncl.tsetlin.tools.genlogger.XmlReader.*;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 
@@ -10,180 +11,91 @@ import org.w3c.dom.Element;
 public class GenLogger {
 
 	public static final StringLibrary str = StringLibrary.load("ncl/tsetlin/tools/genlogger/GenLogger.str");
+	public static String defsName = "TsetlinLoggerDefs.h";
+	public static String loggerName = "TsetlinLogger.h";
 	
-	public abstract static class Probe {
-		public String id;
-		public boolean cls;
-		public String type;
-		
-		public String getLogFormat() {
-			switch(type) {
-				case "int": return "%d";
-				case "float": return "%.3f";
-				default:
-					throw new RuntimeException("Unknown log type: "+type);
-			}
-		}
-		
-		public void printCache(PrintStream out) {
-		}
-		
-		public void printResetCache(PrintStream out) {
-		}
-		
-		public void printHeader(PrintStream out) {
-			out.printf(str.get(cls ? "probe.header.cls" : "probe.header"), id);
-		}
-		
-		public void printLog(PrintStream out) {
-			if(cls) out.print("\t");
-			out.printf(str.get("probe.log"), getLogFormat(), getCalcCode());
-		}
-		
-		public abstract String getCalcCode();
-	}
-	
-	public static class Var extends Probe {
-		public String cache = null;
-		public String calc = null;
-		@Override
-		public void printCache(PrintStream out) {
-			if(cache!=null)
-				out.printf(str.get(cls ? "var.cache.cls" : "var.cache"), type, cache);
-		}
-		@Override
-		public void printResetCache(PrintStream out) {
-			if(cache!=null)
-				out.printf(str.get(cls ? "status.resetCache.code.cls" : "status.resetCache.code"), getCalcCode());
-		}
-		@Override
-		public String getCalcCode() {
-			if(cache!=null)
-				return String.format(str.get(cls ? "var.code.cache.cls" : "var.code.cache"), cache);
-			else if(calc!=null)
-				return calc;
-			else
-				throw new RuntimeException("var: cache or calculation code required.");
-		}
-	}
-	
-	public static class Event extends Probe {
-		public String counter;
-		public String reset;
-		public String avg;
-		@Override
-		public String getCalcCode() {
-			if(avg==null)
-				return String.format(str.get("event.code"), counter);
-			else
-				return String.format(str.get("event.code.avg"), counter, avg);
-		}
-		@Override
-		public void printLog(PrintStream out) {
-			super.printLog(out);
-			out.printf(str.get("event.log"), counter, reset);
-		}
-	}
-	
+	public ArrayList<String> defIncludes = new ArrayList<>();
 	public ArrayList<String> includes = new ArrayList<>();
-	public boolean joinClasses = true;
-	
-	public String statesPath, statesEnable;
-	public String statusPath, statusEnable;
-	public String minState, maxState, stateCode;
-	
-	public ArrayList<Probe> probes = new ArrayList<>();
-	
-	// TODO tm types, get tm from mctm, tm member access
-	
-	private boolean hasClassProbes() {
-		for(Probe pr : probes) {
-			if(pr.cls) return true;
-		}
-		return false;
-	}
-	
-	public void generate(PrintStream out) {
-		out.print(str.get("main.start"));
-		for(String file : includes)
-			out.printf(str.get("main.include"), file);
-		out.printf(str.get("main.defs"), statesPath, statusPath, minState, maxState);
-		
-		// states
-		out.print(str.get("states.struct"));
+	public ArrayList<Log> logs = new ArrayList<>();
 
-		out.printf(str.get("startLog.start"), "startLogTAStates", "LogTAStates", "TASTATES_PATH", statesEnable);
-		out.print(str.get("states.startLog.body"));
-		out.print(str.get("startLog.finish"));
-		
-		out.printf(str.get("states.log"), stateCode);
-		
-		out.printf(str.get("finishLog"), "finishLogTAStates", "LogTAStates", statesEnable);
-		
-		// status
-		out.print(str.get("status.struct.start"));
-		for(Probe pr : probes)
-			pr.printCache(out);
-		out.print(str.get("status.struct.finish"));
-		
-		boolean clsProbes = hasClassProbes();
-		
-		out.printf(str.get("startLog.start"), "startLogStatus", "LogStatus", "STATUS_PATH", statusEnable);
-		for(Probe pr : probes) {
-			if(!pr.cls)
-				pr.printHeader(out);
-		}
-		if(clsProbes) {
-			out.print(str.get("status.startLog.classes.0"));
-			for(Probe pr : probes) {
-				if(pr.cls)
-					pr.printHeader(out);
-			}
-			out.print(str.get("status.startLog.classes.1"));
-		}
-		out.print(str.get("startLog.finish.0"));
-		for(Probe pr : probes) {
-			if(!pr.cls)
-				pr.printResetCache(out);
-		}
-		if(clsProbes) {
-			out.print(str.get("status.resetCache.classes.0"));
-			for(Probe pr : probes) {
-				if(pr.cls)
-					pr.printResetCache(out);
-			}
-			out.print(str.get("status.resetCache.classes.1"));
-		}
-		out.print(str.get("startLog.finish.1"));
-		
-		// log
-		out.print(str.get("status.log.start"));
-		for(Probe pr : probes) {
-			if(!pr.cls)
-				pr.printLog(out);
-		}
-		if(clsProbes) {
-			out.print(str.get("status.log.classes.0"));
-			for(Probe pr : probes) {
-				if(pr.cls)
-					pr.printLog(out);
-			}
-			out.print(str.get("status.log.classes.1"));
-		}
-		out.print(str.get("status.log.finish"));
-		
-		out.printf(str.get("finishLog"), "finishLogStatus", "LogStatus", statusEnable);
-		
-		out.println("#endif");
+	private void printIncludes(PrintStream out, ArrayList<String> includes) {
+		for(String file : includes)
+			out.printf(str.get("include"), file);
+		out.println();
 	}
 	
+	public void genDefs(PrintStream out) {
+		out.print(str.get("defs.begin"));
+		printIncludes(out, defIncludes);
+		
+		for(Log log : logs)
+			out.printf(str.get("defs.path"), log.getPathConst(), log.path);
+		out.println();
+		
+		for(Log log : logs)
+			log.printDefs(out);
+		out.println();
+
+		for(Log log : logs)
+			out.printf(str.get("log.enable.defs"), log.enable);
+		out.printf(str.get("log.enable.defs"), "LOG_APPEND");
+		out.println();
+
+		ArrayList<StatusLog.Event> counters = StatusLog.collectCounters(logs);
+		if(!counters.isEmpty()) {
+			out.printf(str.get("log.counter.defs"),
+					StatusLog.getCounterDefs(counters),
+					StatusLog.getCounterResets(counters));
+			out.println();
+		}
+		
+		out.print(str.get("end"));
+	}
+
+	public void genLogger(PrintStream out) {
+		out.print(str.get("main.begin"));
+		printIncludes(out, includes);
+		
+		for(Log log : logs)
+			log.printLocalDefs(out);
+		out.println();
+		
+		for(Log log : logs) {
+			log.printSeparator(out);
+			log.printTypedefs(out);
+			log.printStartLog(out);
+			log.printLog(out);
+			log.printFinishLog(out);
+		}
+		
+		out.print(str.get("end"));
+	}
+
 	public void write(String path) {
 		try {
-			generate(new PrintStream(path));
+			genDefs(new PrintStream(new File(path, defsName)));
+			genLogger(new PrintStream(new File(path, loggerName)));
 		}
 		catch (Exception e) {
-			System.err.println("Cannot write logger code "+path);
+			System.err.println("Cannot write logger code to "+path);
 			e.printStackTrace();
+		}
+	}
+	
+	private static void getIncludes(Element parent, ArrayList<String> includes) {
+		if(parent==null)
+			return;
+		for(Element e : elements(parent, "include")) {
+			String file = attr(e, "file", null);
+			String std = attr(e, "std", null);
+			if((file==null) ^ (std==null)) {
+				if(file!=null)
+					includes.add(str.format("inc.file", file));
+				else
+					includes.add(str.format("inc.std", std));
+			}
+			else
+				throw new RuntimeException("include: file or std attribute required, but not both.");
 		}
 	}
 	
@@ -194,61 +106,11 @@ public class GenLogger {
 				throw new RuntimeException("Cannot read file.");
 			GenLogger gen = new GenLogger();
 			
-			for(Element e : elements(root, "include")) {
-				String file = attr(e, "file", null);
-				if(file==null)
-					throw new RuntimeException("include: file attribute required.");
-				gen.includes.add(file);
-			}
+			getIncludes(element(root, "defs"), gen.defIncludes);
+			getIncludes(root, gen.includes);
 			
-			Element states = element(root, "states");
-			gen.statesPath = attr(states, "path", "tm-spectrum.csv");
-			gen.statesEnable = attr(states, "enable", "LOG_TASTATES");
-			gen.minState = attr(states, "min", "0");
-			gen.maxState = attr(states, "max", "NUM_STATES-1");
-			gen.stateCode = states.getTextContent().trim();
-			
-			Element status = element(root, "status");
-			gen.joinClasses = attrBool(status, "joinClasses", true);
-			gen.statusPath = attr(status, "path", "tm-status.csv");
-			gen.statusEnable = attr(status, "enable", "LOG_STATUS");
-			
-			for(Element grp : elements(status, "tm", "class")) {
-				boolean cls = grp.getTagName().equals("class");
-				for(Element p : elements(grp, "var", "event")) {
-					Probe pr;
-					boolean var;
-					if(p.getTagName().equals("var")) {
-						pr = new Var();
-						pr.type = "float";
-						var = true;
-					}
-					else {
-						pr = new Event();
-						pr.type = "int";
-						var = false;
-					}
-					pr.id = attr(p, "id", null);
-					if(pr.id==null)
-						throw new RuntimeException("Probe id required.");
-					pr.cls = cls;
-					if(var) {
-						Var v = (Var) pr;
-						v.cache = attr(p, "cache", null);
-						if(v.cache==null)
-							v.calc = p.getTextContent().trim();
-					}
-					else {
-						Event e = (Event) pr;
-						e.counter = attr(p, "counter", pr.id);
-						e.reset = attr(p, "reset", "0");
-						e.avg = attr(p, "avg", null);
-						if(e.avg!=null)
-							pr.type = "float";
-					}
-					pr.type = attr(p, "type", pr.type);
-					gen.probes.add(pr);
-				}
+			for(Element log : elements(root, Log.tags)) {
+				gen.logs.add(Log.load(log));
 			}
 
 			return gen;
@@ -261,10 +123,23 @@ public class GenLogger {
 		}
 	}
 	
+	private static String inPath = null;
+	private static String outPath = ".";
+	
 	public static void main(String[] args) {
-		loadConfig("logger.xml")
-			//.generate(System.out);
-			.write("out/TsetlinLogger.h");
+		
+		ParseParams p = new ParseParams();
+		p.addStrParam(x -> inPath = x, "input");
+		p.addStrParam("-o", x -> outPath = x, "output path");
+		if(!p.parseParams(args))
+			System.exit(1);
+		if(inPath==null) {
+			System.err.println("Input XML is not specified.");
+			p.printUsage();
+			System.exit(1);
+		}
+		
+		loadConfig(inPath).write(outPath);
 		System.out.println("Done");
 	}
 

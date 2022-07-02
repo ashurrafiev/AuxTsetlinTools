@@ -56,7 +56,11 @@ public class StringLibrary {
 	public String get(String key) {
 		return map.get(key);
 	}
-	
+
+	public String format(String key, Object... args) {
+		return String.format(map.get(key), args);
+	}
+
 	public static StringLibrary load(String uri) {
 		try {
 			InputStream in = ClassLoader.getSystemResourceAsStream(uri);
