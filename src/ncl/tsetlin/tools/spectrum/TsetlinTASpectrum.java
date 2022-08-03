@@ -17,13 +17,15 @@ import com.xrbpowered.jdiagram.data.Data.Row;
 
 public class TsetlinTASpectrum {
 
-	public static final String dataPath = "data/tm-spectrum.csv"; 
+	public static final String basePath = "../../ClassParallelTM/bak/res0803/3/";
+	
+	public static final String dataPathFmt = basePath+"c%d-spectrum.csv";
 	public static final int classes = 10;
 	public static final int minState = -99;
 	public static final int maxState = 100;
 	public static final int ycount = maxState-minState+1;
 	
-	public static final String imgPathFmt = "data/tm-spectrum-c%d.png";
+	public static final String imgPathFmt = basePath+"c%d-spectrum.png";
 	public static final int pointw = 4;
 	public static final int pointh = 2;
 	public static final double normalise = 1500.0; // 1000.0;
@@ -49,9 +51,11 @@ public class TsetlinTASpectrum {
 	}
 	
 	public static void main(String[] args) {
-		Data data = Data.read(new File(dataPath));
-		int xcount = data.count();
 		for(int cls=0; cls<classes; cls++) {
+			String dataPath = String.format(dataPathFmt, cls);
+			Data data = Data.read(new File(dataPath));
+			int xcount = data.count();
+			
 			BufferedImage img = new BufferedImage(pointw*xcount+marginLeft+marginRight, pointh*ycount+marginTop+marginBottom, BufferedImage.TYPE_INT_RGB);
 			Graphics2D g2 = img.createGraphics();
 			g2.setColor(Color.WHITE);
@@ -62,7 +66,7 @@ public class TsetlinTASpectrum {
 			for(Row row : data.rows()) {
 				if(x>0) {
 					for(int y=0; y<ycount; y++) {
-						String hdr = String.format("c%d%+d", cls, y+minState);
+						String hdr = String.format("s%+d", y+minState);
 						Double v = row.getNum(hdr);
 						if(v==null) {
 							System.out.printf("[%s][%d] is null\n", hdr, x);
