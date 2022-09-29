@@ -2,7 +2,8 @@
 /data/
 /out/
 *.txt
-
+TsetlinLogger.h
+TsetlinLoggerDefs.h
 
 # Compiled class file
 *.class

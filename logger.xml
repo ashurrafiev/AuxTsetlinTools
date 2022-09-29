@@ -1,25 +1,34 @@
 <logger>
+<defs>
+	<include file="TsetlinOptions.h" />
+</defs>
 <include file="MultiClassTsetlinMachine.h" />
 
-<states path="tm-spectrum.csv" enable="LOG_TASTATES"
-	min="-NUM_STATES+1" max="NUM_STATES">
-	<![CDATA[ tm->clauses[j].ta[k] ]]>
-</states>
+<spectrum path="c%d-spectrum.csv" enable="LOG_TASTATES"
+		minstate="-NUM_STATES+1" maxstate="NUM_STATES"
+		clauses="CLAUSES" literals="LITERALS">
+	<params> TsetlinMachine* tm </params>
+	<tastate><![CDATA[ tm->clauses[j].ta[k] ]]></tastate>
+</spectrum>
 
-<status joinClasses="true" path="tm-status.csv" enable="LOG_STATUS">
-	<tm>
-		<var id="acctrain" cache="accTrain" />
-		<var id="acctest" cache="accTest" />
-	</tm>
-	<class>
-		<var id="acc" cache="acc" />
-		<var id="inc" type="int"> countIncluded(tm) </var>
-		<event id="flips" avg="stepSize" reset="0" />
-		<event id="type1-c" counter="countType1" reset="1" />
-		<event id="type2-c" counter="countType2" reset="1" />
-		<event id="vote" counter="voteSum" avg="stepSize" reset="0" />
-	</class>
+<status name="Status" scope="class"
+		path="c%d-status.csv" enable="LOG_STATUS">
+	<params> int stepSize, TsetlinMachine* tm </params>
+	<access><![CDATA[ tm-> ]]></access>
+	
+	<var id="inc" type="int"> countIncluded(tm) </var>
+	<event id="flips" avg="stepSize" reset="0" />
+	<event id="type1" counter="countType1" reset="1" />
+	<event id="type2" counter="countType2" reset="1" />
+	<event id="avote" counter="absVoteSum" avg="stepSize" reset="0" />
+	<event id="vote1" counter="voteSum1" avg="stepSize" reset="0" />
+	<event id="vote0" counter="voteSum0" avg="stepSize" reset="0" />
+</status>
+
+<status name="Acc" scope="global"
+		path="acc.csv" enable="LOG_ACCEVAL">
+	<var id="acctrain" cache="accTrain" group="CLASSES" />
+	<var id="acctest" cache="accTest" group="CLASSES" />
 </status>
 
 </logger>
-
