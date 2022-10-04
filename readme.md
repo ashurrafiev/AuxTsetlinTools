@@ -4,7 +4,7 @@
 
 **Logger generator** automatically creates `TsetlinLoggerDefs.h` and `TsetlinLogger.h` files from an XML description.
 The generated files can save TM state and other data in CSV format for visualization. The API is (supposedly) generic enough
-to be compatible with any C implementation of the TM; see logger XML [documentation](loggerxml.md).
+to be compatible with any C implementation of the TM; see [logger XML documentation](loggerxml.md).
 
 Package: [ncl.tsetlin.tools.genlogger](src/ncl/tsetlin/tools/genlogger)  
 Main class: [GenLogger](src/ncl/tsetlin/tools/genlogger/GenLogger.java)  
