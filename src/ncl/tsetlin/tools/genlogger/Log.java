@@ -1,7 +1,7 @@
 package ncl.tsetlin.tools.genlogger;
 
 import static ncl.tsetlin.tools.genlogger.GenLogger.str;
-import static ncl.tsetlin.tools.genlogger.XmlReader.*;
+import static ncl.tsetlin.tools.utils.XmlReader.*;
 
 import java.io.PrintStream;
 

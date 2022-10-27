@@ -1,12 +1,15 @@
 package ncl.tsetlin.tools.genlogger;
 
-import static ncl.tsetlin.tools.genlogger.XmlReader.*;
+import static ncl.tsetlin.tools.utils.XmlReader.*;
 
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 
 import org.w3c.dom.Element;
+
+import ncl.tsetlin.tools.utils.ParseParams;
+import ncl.tsetlin.tools.utils.StringLibrary;
 
 public class GenLogger {
 
@@ -127,7 +130,6 @@ public class GenLogger {
 	private static String outPath = ".";
 	
 	public static void main(String[] args) {
-		
 		ParseParams p = new ParseParams();
 		p.addStrParam(x -> inPath = x, "input");
 		p.addStrParam("-o", x -> outPath = x, "output path");
@@ -135,6 +137,7 @@ public class GenLogger {
 			System.exit(1);
 		if(inPath==null) {
 			System.err.println("Input XML is not specified.");
+			System.err.flush();
 			p.printUsage();
 			System.exit(1);
 		}

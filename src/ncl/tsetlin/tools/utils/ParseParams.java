@@ -1,4 +1,4 @@
-package ncl.tsetlin.tools.genlogger;
+package ncl.tsetlin.tools.utils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -74,6 +74,34 @@ public class ParseParams {
 		}
 	}
 	
+	private class IntParamDef extends ParamDef<Integer> {
+		public IntParamDef(Consumer<Integer> set, String desc) {
+			super(set, desc);
+		}
+		@Override
+		public String getType(boolean ord) {
+			return ord ? null : "int";
+		}
+		@Override
+		public Integer parse(String s) {
+			return Integer.parseInt(s);
+		}
+	}
+	
+	private class DoubleParamDef extends ParamDef<Double> {
+		public DoubleParamDef(Consumer<Double> set, String desc) {
+			super(set, desc);
+		}
+		@Override
+		public String getType(boolean ord) {
+			return ord ? null : "int";
+		}
+		@Override
+		public Double parse(String s) {
+			return Double.parseDouble(s);
+		}
+	}
+	
 	public LinkedHashMap<String, ParamDef<?>> options = new LinkedHashMap<>();
 	public ArrayList<ParamDef<?>> ords = new ArrayList<>();
 
@@ -87,6 +115,22 @@ public class ParseParams {
 
 	public void addStrParam(Consumer<String> set, String description) {
 		ords.add(new StrParamDef(set, description));
+	}
+
+	public void addIntParam(String name, Consumer<Integer> set, String description) {
+		options.put(name, new IntParamDef(set, description));
+	}
+
+	public void addIntParam(Consumer<Integer> set, String description) {
+		ords.add(new IntParamDef(set, description));
+	}
+	
+	public void addDoubleParam(String name, Consumer<Double> set, String description) {
+		options.put(name, new DoubleParamDef(set, description));
+	}
+
+	public void addDoubleParam(Consumer<Double> set, String description) {
+		ords.add(new DoubleParamDef(set, description));
 	}
 
 	public void printUsage() {

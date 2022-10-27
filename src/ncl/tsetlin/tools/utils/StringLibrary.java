@@ -1,4 +1,4 @@
-package ncl.tsetlin.tools.genlogger;
+package ncl.tsetlin.tools.utils;
 
 import java.io.File;
 import java.io.FileInputStream;

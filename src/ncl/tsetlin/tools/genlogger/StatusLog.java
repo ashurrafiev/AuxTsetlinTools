@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import org.w3c.dom.Element;
 
 import static ncl.tsetlin.tools.genlogger.GenLogger.str;
-import static ncl.tsetlin.tools.genlogger.XmlReader.*;
+import static ncl.tsetlin.tools.utils.XmlReader.*;
 
 public class StatusLog extends Log {
 

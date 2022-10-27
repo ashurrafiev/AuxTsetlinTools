@@ -27,8 +27,17 @@ Package: [ncl.tsetlin.tools.pkbits](src/ncl/tsetlin/tools/pkbits)
 
 ## TA State Spectrogram
 
-Package: [ncl.tsetlin.tools.spectrum](src/ncl/tsetlin/tools/spectrum)
+Package: [ncl.tsetlin.tools.spectrum](src/ncl/tsetlin/tools/spectrum)  
+Main class: [TsetlinTASpectrum](src/ncl/tsetlin/tools/spectrum/TsetlinTASpectrum.java)  
+Usage:
+```
+java -cp bin ncl.tsetlin.tools.spectrum.TsetlinTASpectrum [options] <csv path>
+```
 
+To get the list of command line options:
+```
+java -cp bin ncl.tsetlin.tools.spectrum.TsetlinTASpectrum -help
+```
 
 ## Clause Similarity Chart
 

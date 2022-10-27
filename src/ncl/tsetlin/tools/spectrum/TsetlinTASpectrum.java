@@ -14,27 +14,39 @@ import java.util.Scanner;
 
 import javax.imageio.ImageIO;
 
+import ncl.tsetlin.tools.utils.ParseParams;
+
 public class TsetlinTASpectrum {
 
-	public static final String basePath = "../../ClassParallelTM/bak/res0902/1jm/";
+	public static final String dataPathFmt = "/c%d-spectrum.csv";
+	public static final String imgPathFmt = "/c%d-spectrum.png";
 	
-	public static final String dataPathFmt = basePath+"c%d-spectrum.csv";
-	public static final int classes = 10;
-	public static final int minState = -99;
-	public static final int maxState = 100;
-	public static final int ycount = maxState-minState+1;
+	public static String basePath = null;
 	
-	public static final String imgPathFmt = basePath+"c%d-spectrum.png";
-	public static final int pointw = 4;
-	public static final int pointh = 2;
-	public static final double normalise = 5000.0; // 1000.0;
+	public static int classes = 10;
+	public static int epochSize = 60;
+	public static int minState = -99;
+	public static int maxState = 100;
 	
-	public static final int marginLeft = 50;
-	public static final int marginRight = 20;
-	public static final int marginTop = 20;
-	public static final int marginBottom = 40;
-	public static final int xgrid = 10;
-	public static final int ygrid = 10;
+	public static int pointw = 4;
+	public static int pointh = 2;
+	public static double normalise = 5000.0; // 1000.0;
+	
+	public static int xgrid = 10;
+	public static int ygrid = 10;
+	
+	public static int marginLeft = 50;
+	public static int marginRight = 20;
+	public static int marginTop = 20;
+	public static int marginBottom = 40;
+	
+	public static String fontName = "Tahoma";
+	public static int fontSize = 13;
+	public static int titleFontSize = 16;
+
+	private static String timeLabel(int x) {
+		return String.format("%d:%dk", (x-1)/epochSize, (x-1)%epochSize);
+	}
 	
 	private static float align(float span, int align) {
 		return span * (float)align / 2f;
@@ -50,8 +62,37 @@ public class TsetlinTASpectrum {
 	}
 	
 	public static void main(String[] args) {
+		ParseParams p = new ParseParams();
+		p.addStrParam(x -> basePath = x, "csv path");
+		p.addIntParam("-classes", x -> classes = x, "number of classes");
+		p.addIntParam("-epochsize", x -> epochSize = x, "number of csv lines per epoch");
+		p.addIntParam("-minstate", x -> minState = x, "lowest TA state");
+		p.addIntParam("-maxstate", x -> maxState = x, "highest TA state");
+		p.addIntParam("-pointw", x -> pointw = x, "spectrum point width");
+		p.addIntParam("-pointh", x -> pointh = x, "spectrum point height");
+		p.addDoubleParam("-brightness", x -> normalise = x, "spectrum brightness factor");
+		p.addIntParam("-xgrid", x -> xgrid = x, "horizontal grid");
+		p.addIntParam("-ygrid", x -> ygrid = x, "vertical grid");
+		p.addIntParam("-margin-left", x -> marginLeft = x, "left margin");
+		p.addIntParam("-margin-right", x -> marginRight = x, "right margin");
+		p.addIntParam("-margin-top", x -> marginTop = x, "top margin");
+		p.addIntParam("-margin-bottom", x -> marginBottom = x, "bottom margin");
+		p.addStrParam("-font", x -> fontName = x, "font name");
+		p.addIntParam("-font-size", x -> fontSize = x, "font size");
+		p.addIntParam("-font-title", x -> titleFontSize = x, "font size (title)");
+		p.addFlagParam("-help", x -> {p.printUsage(); System.exit(1);}, null);
+		if(!p.parseParams(args))
+			System.exit(1);
+		if(basePath==null) {
+			System.err.println("Path to CSV files is not specified.");
+			System.err.flush();
+			p.printUsage();
+			System.exit(1);
+		}
+		
+		int ycount = maxState-minState+1; 
 		for(int cls=0; cls<classes; cls++) {
-			String dataPath = String.format(dataPathFmt, cls);
+			String dataPath = String.format(basePath+dataPathFmt, cls);
 			
 			ArrayList<String> lines = new ArrayList<>();
 			try {
@@ -107,11 +148,11 @@ public class TsetlinTASpectrum {
 			g2.drawLine(pointw, y, pointw*xcount, y);
 			
 			g2.setColor(Color.BLACK);
-			Font font = new Font("Tahoma", Font.PLAIN, 13);
+			Font font = new Font(fontName, Font.PLAIN, fontSize);
 			g2.setFont(font);
 			g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 			for(x=1; x<=xcount; x+=xgrid)
-				drawString(g2, String.format("%d:%dk", (x-1)/60, (x-1)%60), x*pointw, pointh*ycount+5, 1, 0);
+				drawString(g2, timeLabel(x), x*pointw, pointh*ycount+5, 1, 0);
 			drawString(g2, "time (epochs:inputs)", xcount*pointw/2, pointh*ycount+20, 1, 0);
 			for(y=0; y<=ygrid; y++) {
 				String s;
@@ -124,12 +165,12 @@ public class TsetlinTASpectrum {
 				drawString(g2, s, 0, y*pointh*ycount/ygrid, 2, 1);
 			}
 			
-			font = font.deriveFont(Font.BOLD, 16);
+			font = font.deriveFont(Font.BOLD, titleFontSize);
 			g2.setFont(font);
 			drawString(g2, String.format("Class '%d'", cls), xcount*pointw/2, -5, 1, 2);
 
 			try {
-				String imgPath = String.format(imgPathFmt, cls);
+				String imgPath = String.format(basePath+imgPathFmt, cls);
 				ImageIO.write(img, "PNG", new File(imgPath));
 				System.out.printf("Saved %s\n", imgPath);
 			} catch (IOException e) {
