@@ -76,7 +76,8 @@ _Inner text or CDATA:_ C expression that gives the TA state for the literal `k` 
 
 This section creates a TM status log that can write arbitrary events and variables. You can have multiple `<status>` sections in one logger, each will create separate log file (or set of files).
 
-... (**TO DO**) Variables and events.
+* **Event** probes can be placed anywhere in the TM code; the tool counts the number of times an event is encountered during each measurement window. Example events: type I and II feedbacks, decision flips, etc.
+* **Variables** are properties and metrics that can be calculated as a function of the TM state. The tool recalculates and logs variables at the end of each measurement window. Example variables: inference accuracy, number of included literals, etc.
 
 The **name** attribute is used to name the generated types and functions for this log section. In the following list, `NAME` will be replaced with this attribute's value.
 
@@ -85,7 +86,10 @@ This section generates the `LogName` helper structure in `TsetlinLogger.h` and t
 * `void logNAME(LogName* log, int step, [additional parameters])` &ndash; write next log entry.
 * `void finishLogNAME(LogName* log)` &ndash; close the log file.
 
-... (**TO DO**) Generated macros: `TM_COUNTERS`, `RESET_COUNTERS`, `COUNT`.
+It also enerates helper macros in `TsetlinLoggerDefs.h`:
+* `TM_COUNTERS` &ndash; the list of event counter variables; put this macro in the body of a single-class TM structure or class.
+* `RESET_COUNTERS(tm)` &ndash; put all counters to their specific reset values.
+* `COUNT(c)` &ndash; increment counter `c`.
 
 _Attributes:_
 
